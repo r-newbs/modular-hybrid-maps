@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hybrid Maps: Interactive Plan Builder</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 40px 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      color: #111;
+    }
+
+    .subtitle {
+      margin-bottom: 30px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .presets-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .presets-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .preset-btn:hover {
+      border-color: #0066cc;
+      background: #f0f6ff;
+      color: #0066cc;
+    }
+
+    .preset-btn.active {
+      border-color: #0066cc;
+      background: #0066cc;
+      color: white;
+    }
+
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .control-section {
+      margin-bottom: 20px;
+    }
+
+    .control-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .control-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      background: white;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .layout {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .layout.one-col {
+      grid-template-columns: 1fr;
+      max-width: 350px;
+    }
+
+    .layout.two-col {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .layout.three-col {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .plan-card {
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .plan-card.default {
+      border-color: #0066cc;
+      background: #f0f6ff;
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+    }
+
+    .plan-card.empty {
+      background: #fafafa;
+      border-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-style: italic;
+    }
+
+    .plan-header {
+      margin-bottom: 16px;
+    }
+
+    .plan-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #111;
+    }
+
+    .plan-tagline {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #555;
+    }
+
+    .plan-divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 16px 0;
+    }
+
+    .features {
+      flex: 1;
+      margin-bottom: 16px;
+    }
+
+    .feature {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+
+    .feature:last-child {
+      margin-bottom: 0;
+    }
+
+    .feature::before {
+      content: '✓';
+      color: #0066cc;
+      font-weight: bold;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .plan-pricing {
+      border-top: 1px solid #e0e0e0;
+      padding-top: 16px;
+    }
+
+    .price {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #111;
+    }
+
+    .guarantee {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #666;
+    }
+
+    .info-box {
+      background: #e8f4f8;
+      border-left: 4px solid #0066cc;
+      padding: 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 1024px) {
+      .layout.three-col {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .layout.two-col,
+      .layout.three-col {
+        grid-template-columns: 1fr;
+      }
+
+      .control-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hybrid Maps: Interactive Plan Builder</h1>
+    <p class="subtitle">Explore different plan combinations with benefit-focused copy</p>
+
+    <div class="info-box">
+      <strong>How it works:</strong> Taglines adapt based on adjacent plans. If a cheaper plan is to the left, comparative copy ("Plan X +") is used. Otherwise, benefit-focused copy stands alone. Prices, plan names, and features always stay consistent.
+    </div>
+
+    <div class="presets-section">
+      <h3>Quick Presets</h3>
+      <div class="preset-buttons">
+        <button class="preset-btn active" onclick="loadPreset('no-camera')">No Outdoor Camera System</button>
+        <button class="preset-btn" onclick="loadPreset('with-camera')">Outdoor Camera System</button>
+        <button class="preset-btn" onclick="loadPreset('3-plans')">3 Plans</button>
+        <button class="preset-btn" onclick="loadPreset('2-plans')">2 Plans</button>
+        <button class="preset-btn" onclick="loadPreset('1-plan')">1 Plan</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control-section" id="threeplanControls">
+        <div class="control-section-title">3 Plans Configuration</div>
+        <div class="control-group">
+          <div>
+            <label for="leftPlan">Left Plan</label>
+            <select id="leftPlan" onchange="updateLayout()">
+              <option value="unmonitored">Unmonitored</option>
+              <option value="selfMonitoring">Self-Monitoring</option>
+              <option value="standard">Standard Monitoring</option>
+              <option value="core">Core Monitoring</option>
+              <option value="pro">Pro Monitoring</option>
+              <option value="proPlus">Pro Plus Monitoring</option>
+            </select>
+          </div>
+          <div>
+            <label for="centerPlan">Default Plan</label>
+            <select id="centerPlan" onchange="updateLayout()">
+              <option value="core">Core Monitoring</option>
+              <option value="unmonitored">Unmonitored</option>
+              <option value="selfMonitoring">Self-Monitoring</option>
+              <option value="standard">Standard Monitoring</option>
+              <option value="pro">Pro Monitoring</option>
+              <option value="proPlus">Pro Plus Monitoring</option>
+            </select>
+          </div>
+          <div>
+            <label for="rightPlan">Right Plan</label>
+            <select id="rightPlan" onchange="updateLayout()">
+              <option value="pro">Pro Monitoring</option>
+              <option value="proPlus">Pro Plus Monitoring</option>
+              <option value="core">Core Monitoring</option>
+              <option value="standard">Standard Monitoring</option>
+              <option value="selfMonitoring">Self-Monitoring</option>
+              <option value="unmonitored">Unmonitored</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-section" id="twoplanControls" style="display:none;">
+        <div class="control-section-title">2 Plans Configuration</div>
+        <div class="control-group">
+          <div>
+            <label for="twoDefaultPlan">Default Plan</label>
+            <select id="twoDefaultPlan" onchange="updateLayout()">
+              <option value="core">Core Monitoring</option>
+              <option value="standard">Standard Monitoring</option>
+              <option value="pro">Pro Monitoring</option>
+              <option value="selfMonitoring">Self-Monitoring</option>
+            </select>
+          </div>
+          <div>
+            <label for="twoComparePlan">Compare Against</label>
+            <select id="twoComparePlan" onchange="updateLayout()">
+              <option value="pro">Pro Monitoring</option>
+              <option value="proPlus">Pro Plus Monitoring</option>
+              <option value="core">Core Monitoring</option>
+              <option value="standard">Standard Monitoring</option>
+              <option value="selfMonitoring">Self-Monitoring</option>
+            </select>
+          </div>
+          <div>
+            <label for="twoDefaultPosition">Default Position</label>
+            <select id="twoDefaultPosition" onchange="updateLayout()">
+              <option value="left">Left (less expensive)</option>
+              <option value="right">Right (more expensive)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-section" id="oneplanControls" style="display:none;">
+        <div class="control-section-title">1 Plan Configuration</div>
+        <div class="control-group">
+          <div>
+            <label for="onePlan">Select Plan</label>
+            <select id="onePlan" onchange="updateLayout()">
+              <option value="core">Core Monitoring</option>
+              <option value="standard">Standard Monitoring</option>
+              <option value="pro">Pro Monitoring</option>
+              <option value="proPlus">Pro Plus Monitoring</option>
+              <option value="selfMonitoring">Self-Monitoring</option>
+              <option value="unmonitored">Unmonitored</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout three-col" id="layout"></div>
+  </div>
+
+  <script>
+    let currentMode = '3-plans'; // Track current mode
+
+    const PLANS = {
+      unmonitored: {
+        name: 'Unmonitored',
+        order: 0,
+        pricePerDay: 'Free',
+        discount: null,
+        warranty: 'Lifetime warranty with active service',
+        taglines: {
+          standalone: 'DIY system with local alerts, no professional monitoring',
+          benefit: 'Local security system with mobile app access',
+        },
+        features: {
+          base: [
+            'Live video feed of your cameras from the SimpliSafe app.',
+            'Remotely arm/disarm your system with the SimpliSafe app.',
+            'Mobile notifications for all activity.',
+            'Lifetime warranty with active service.',
+          ],
+        },
+      },
+      selfMonitoring: {
+        name: 'Self-Monitoring',
+        order: 1,
+        pricePerDay: '$0.33/day',
+        discount: null,
+        warranty: 'Lifetime warranty with active service',
+        taglines: {
+          standalone: 'DIY monitoring with unlimited camera recordings',
+          benefit: 'Unlimited camera recordings and mobile alerts',
+          afterUnmonitored: 'Unmonitored + unlimited camera recordings',
+        },
+        features: {
+          base: [
+            'Unlimited camera recordings for 30 days (video only, encrypted).',
+            'Push notifications for all camera activity.',
+            'Email notifications for alarms.',
+            'You monitor your own system via app.',
+            'No professional response — you decide when to call 911.',
+          ],
+        },
+      },
+      standard: {
+        name: 'Standard Monitoring',
+        order: 2,
+        pricePerDay: '$0.76/day',
+        discount: '50% off equipment',
+        warranty: 'Lifetime warranty with active service',
+        taglines: {
+          standalone: 'Professional monitoring with 24/7 emergency dispatch',
+          benefit: 'Professional monitoring and emergency dispatch',
+          afterSelfMonitoring: 'Self-Monitoring + professional monitoring with 24/7 dispatch',
+          afterUnmonitored: 'Unmonitored + professional monitoring with 24/7 dispatch',
+        },
+        features: {
+          base: [
+            'When your alarm is triggered, sirens blare and you get notified.',
+            'U.S.-based agents request dispatch for break-ins, fires, and floods, 24/7.',
+            'Video is encrypted and stored in the cloud for 30 days.',
+            'Agents deter crime by speaking to potential intruders through your indoor camera.',
+          ],
+        },
+      },
+      core: {
+        name: 'Core Monitoring',
+        order: 3,
+        pricePerDay: '$1.10/day',
+        discount: '50% off equipment',
+        warranty: 'Lifetime warranty with active service',
+        taglines: {
+          standalone: 'Professional monitoring with indoor and outdoor control',
+          benefit: 'Indoor monitoring plus real-time outdoor alerts',
+          afterStandard: 'Standard + real-time motion alerts and 2-way outdoor audio',
+          afterSelfMonitoring: 'Self-Monitoring + professional monitoring and outdoor alerts',
+          afterUnmonitored: 'Unmonitored + professional monitoring and outdoor alerts',
+        },
+        features: {
+          base: [
+            'When your alarm is triggered, sirens blare and you get notified.',
+            'U.S.-based agents request dispatch for break-ins, fires, and floods, 24/7.',
+            'Video is encrypted and stored in the cloud for 30 days.',
+            'Agents deter crime by speaking to potential intruders through your indoor camera.',
+            'Real-time motion alerts from outdoor cameras.',
+            'Speak directly to anyone outside with 2-way audio.',
+          ],
+        },
+      },
+      pro: {
+        name: 'Pro Monitoring',
+        order: 4,
+        pricePerDay: '$1.66/day',
+        discount: '50% off equipment',
+        warranty: 'Lifetime warranty with active service',
+        taglines: {
+          standalone: 'Overnight protection with AI outdoor camera and live agent intervention',
+          benefit: 'Overnight outdoor crime prevention with live agent intervention',
+          afterCore: 'Core + AI outdoor camera threat detection and agent intervention (8pm–6am)',
+          afterStandard: 'Core + outdoor crime prevention overnight',
+        },
+        features: {
+          base: [
+            'When your alarm is triggered, sirens blare and you get notified.',
+            'U.S.-based agents request dispatch for break-ins, fires, and floods, 24/7.',
+            'Video is encrypted and stored in the cloud for 30 days.',
+            'Agents deter crime by speaking to potential intruders through your indoor camera.',
+            'Real-time motion alerts from outdoor cameras.',
+            'Speak directly to anyone outside with 2-way audio.',
+            'Smart AI outdoor camera spots threats and alerts a live agent.',
+            'Agents stop intruders outside before they enter with camera siren, spotlight, and verbal warning (active 8pm–6am).',
+          ],
+        },
+      },
+      proPlus: {
+        name: 'Pro Plus Monitoring',
+        order: 5,
+        pricePerDay: '$2.66/day',
+        discount: '50% off equipment',
+        warranty: 'Lifetime warranty with active service',
+        taglines: {
+          standalone: '24/7 outdoor crime prevention with AI camera and live agents',
+          benefit: '24/7 outdoor protection with AI threat detection and agent response',
+          afterPro: 'Pro + always-on protection (upgraded from 8pm–6am)',
+          afterCore: 'Core + 24/7 outdoor crime prevention',
+        },
+        features: {
+          base: [
+            'When your alarm is triggered, sirens blare and you get notified.',
+            'U.S.-based agents request dispatch for break-ins, fires, and floods, 24/7.',
+            'Video is encrypted and stored in the cloud for 30 days.',
+            'Agents deter crime by speaking to potential intruders through your indoor camera.',
+            'Real-time motion alerts from outdoor cameras.',
+            'Speak directly to anyone outside with 2-way audio.',
+            'Smart AI outdoor camera spots threats and alerts a live agent.',
+            'Agents stop intruders outside before they enter with camera siren, spotlight, and verbal warning (active 24/7).',
+          ],
+        },
+      },
+    };
+
+    const PLAN_ORDER = {
+      unmonitored: 0,
+      selfMonitoring: 1,
+      standard: 2,
+      core: 3,
+      pro: 4,
+      proPlus: 5,
+    };
+
+    function capitalize(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1).replace(/([A-Z])/g, '$1');
+    }
+
+    function getTagline(planKey, leftPlan, rightPlan) {
+      const plan = PLANS[planKey];
+      if (!plan) return '';
+
+      if (leftPlan && PLAN_ORDER[leftPlan] < PLAN_ORDER[planKey]) {
+        const contextKey = `after${capitalize(leftPlan)}`;
+        if (plan.taglines[contextKey]) {
+          return plan.taglines[contextKey];
+        }
+      }
+
+      if (plan.taglines.benefit) {
+        return plan.taglines.benefit;
+      }
+
+      return plan.taglines.standalone || '';
+    }
+
+    function getFeatures(planKey) {
+      const plan = PLANS[planKey];
+      return plan?.features?.base || [];
+    }
+
+    function getPricingFooter(planKey) {
+      const plan = PLANS[planKey];
+      if (!plan) return '';
+
+      let footer = '';
+      if (plan.discount) {
+        footer += plan.discount + '<br>';
+      }
+      if (plan.pricePerDay === 'Free') {
+        footer += 'No plan required';
+      } else if (plan.pricePerDay) {
+        footer += `First month free, then ${plan.pricePerDay} after that<br>`;
+      }
+      if (plan.warranty) {
+        footer += plan.warranty;
+      }
+
+      return footer;
+    }
+
+    function renderCard(planKey, position, isDefault) {
+      if (!planKey) {
+        return `<div class="plan-card empty">No plan selected</div>`;
+      }
+
+      const plan = PLANS[planKey];
+      let leftContext = null;
+      let rightContext = null;
+
+      if (currentMode === '3-plans') {
+        const leftPlan = document.getElementById('leftPlan').value || null;
+        const centerPlan = document.getElementById('centerPlan').value;
+        const rightPlan = document.getElementById('rightPlan').value || null;
+
+        if (position === 'left') {
+          rightContext = centerPlan;
+        } else if (position === 'center') {
+          leftContext = leftPlan;
+          rightContext = rightPlan;
+        } else if (position === 'right') {
+          leftContext = centerPlan;
+        }
+      } else if (currentMode === '2-plans') {
+        const defaultPlan = document.getElementById('twoDefaultPlan').value;
+        const comparePlan = document.getElementById('twoComparePlan').value;
+        const defaultPos = document.getElementById('twoDefaultPosition').value;
+
+        if (defaultPos === 'left') {
+          if (position === 'left') {
+            rightContext = comparePlan;
+          } else if (position === 'right') {
+            leftContext = defaultPlan;
+          }
+        } else {
+          if (position === 'left') {
+            rightContext = defaultPlan;
+          } else if (position === 'right') {
+            leftContext = defaultPlan;
+          }
+        }
+      }
+
+      const tagline = getTagline(planKey, leftContext, rightContext);
+      const classStr = isDefault ? 'plan-card default' : 'plan-card';
+
+      const priceSection = `<div class="plan-pricing">
+        <div class="price">${plan.pricePerDay}</div>
+        <div class="guarantee">${getPricingFooter(planKey)}</div>
+      </div>`;
+
+      return `
+        <div class="${classStr}">
+          <div class="plan-header">
+            <div class="plan-name">${plan.name}</div>
+            <div class="plan-tagline">${tagline}</div>
+          </div>
+          <div class="plan-divider"></div>
+          <div class="features">
+            ${getFeatures(planKey).map(f => `<div class="feature">${f}</div>`).join('')}
+          </div>
+          ${priceSection}
+        </div>
+      `;
+    }
+
+    function updateLayout() {
+      const layoutEl = document.getElementById('layout');
+
+      if (currentMode === '3-plans') {
+        const leftPlan = document.getElementById('leftPlan').value || null;
+        const centerPlan = document.getElementById('centerPlan').value;
+        const rightPlan = document.getElementById('rightPlan').value || null;
+
+        layoutEl.classList.remove('one-col', 'two-col', 'three-col');
+        layoutEl.classList.add('three-col');
+
+        layoutEl.innerHTML = `
+          ${renderCard(leftPlan, 'left', false)}
+          ${renderCard(centerPlan, 'center', true)}
+          ${renderCard(rightPlan, 'right', false)}
+        `;
+      } else if (currentMode === '2-plans') {
+        const defaultPlan = document.getElementById('twoDefaultPlan').value;
+        const comparePlan = document.getElementById('twoComparePlan').value;
+        const defaultPos = document.getElementById('twoDefaultPosition').value;
+
+        layoutEl.classList.remove('one-col', 'two-col', 'three-col');
+        layoutEl.classList.add('two-col');
+
+        const leftPlan = defaultPos === 'left' ? defaultPlan : comparePlan;
+        const rightPlan = defaultPos === 'left' ? comparePlan : defaultPlan;
+        const leftIsDefault = defaultPos === 'left';
+        const rightIsDefault = defaultPos === 'right';
+
+        layoutEl.innerHTML = `
+          ${renderCard(leftPlan, 'left', leftIsDefault)}
+          ${renderCard(rightPlan, 'right', rightIsDefault)}
+        `;
+      } else if (currentMode === '1-plan') {
+        const onePlan = document.getElementById('onePlan').value;
+
+        layoutEl.classList.remove('one-col', 'two-col', 'three-col');
+        layoutEl.classList.add('one-col');
+
+        layoutEl.innerHTML = renderCard(onePlan, 'center', true);
+      }
+    }
+
+    function loadPreset(preset) {
+      const presets = {
+        'no-camera': {
+          mode: '3-plans',
+          left: 'standard',
+          center: 'core',
+          right: 'pro',
+        },
+        'with-camera': {
+          mode: '3-plans',
+          left: 'core',
+          center: 'pro',
+          right: 'proPlus',
+        },
+        '3-plans': {
+          mode: '3-plans',
+          left: 'standard',
+          center: 'core',
+          right: 'pro',
+        },
+        '2-plans': {
+          mode: '2-plans',
+          default: 'core',
+          compare: 'pro',
+          position: 'left',
+        },
+        '1-plan': {
+          mode: '1-plan',
+          plan: 'pro',
+        },
+      };
+
+      const config = presets[preset];
+      if (config) {
+        currentMode = config.mode;
+
+        // Hide all controls
+        document.getElementById('threeplanControls').style.display = 'none';
+        document.getElementById('twoplanControls').style.display = 'none';
+        document.getElementById('oneplanControls').style.display = 'none';
+
+        if (config.mode === '3-plans') {
+          document.getElementById('threeplanControls').style.display = 'block';
+          document.getElementById('leftPlan').value = config.left;
+          document.getElementById('centerPlan').value = config.center;
+          document.getElementById('rightPlan').value = config.right;
+        } else if (config.mode === '2-plans') {
+          document.getElementById('twoplanControls').style.display = 'block';
+          document.getElementById('twoDefaultPlan').value = config.default;
+          document.getElementById('twoComparePlan').value = config.compare;
+          document.getElementById('twoDefaultPosition').value = config.position;
+        } else if (config.mode === '1-plan') {
+          document.getElementById('oneplanControls').style.display = 'block';
+          document.getElementById('onePlan').value = config.plan;
+        }
+
+        // Update active button
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        updateLayout();
+      }
+    }
+
+    // Initialize
+    loadPreset('no-camera');
+  </script>
+</body>
+</html>
